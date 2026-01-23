@@ -1,0 +1,59 @@
+# OS Files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE / Editor
+.vscode/
+.idea/
+.sublime-project
+.sublime-workspace
+*.code-workspace
+.phpcs.xml.dist
+
+# PHP / Composer
+vendor/
+composer.lock
+
+# Node / NPM / Webpack
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+build/
+
+# Environment Files
+.env
+.env.local
+.env.*.local
+
+# WordPress
+wp-config.php
+wp-content/uploads/
+wp-content/backup-*
+wp-cache-config.php
+wp-content/advanced-cache.php
+
+# Testing
+.phpunit.result.cache
+coverage/
+.coverage
+
+# Logs
+*.log
+logs/
+
+# Temporary Files
+*.tmp
+*.temp
+*.bak
+
+# OS Generated Files
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+desktop.ini
