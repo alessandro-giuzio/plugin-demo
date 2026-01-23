@@ -1,20 +1,17 @@
-# WordPress Plugins Directory
+# 🔌 WordPress Plugins
 
-This directory contains WordPress plugins for experimentation and development. Each plugin is in its own folder and can be independently activated/deactivated through the WordPress admin panel or WP-CLI.
+Experimentation & development playground for WordPress plugins.
 
----
+## ⚡ Quick Start
 
-## Plugin Development Guide
+### Create a New Plugin
 
-### Adding a New Plugin
+```bash
+mkdir my-plugin
+cd my-plugin
+```
 
-1. **Create a new folder** in this directory:
-
-   ```bash
-   mkdir my-new-plugin
-   ```
-
-2. **Create the main plugin file** `my-new-plugin.php`:
+1. **Create the main plugin file** `my-new-plugin.php`:
 
    ```php
    <?php
@@ -33,7 +30,7 @@ This directory contains WordPress plugins for experimentation and development. E
    // Your plugin code here
    ```
 
-3. **Organize plugin structure** (recommended):
+2. **Organize plugin structure** (recommended):
 
    ```
    my-new-plugin/
@@ -58,7 +55,7 @@ This directory contains WordPress plugins for experimentation and development. E
    └── license.txt                     (Plugin license)
    ```
 
-4. **Create documentation** in `README.md` with:
+3. **Create documentation** in `README.md` with:
    - Plugin description and features
    - Installation instructions
    - Configuration guide
@@ -67,7 +64,7 @@ This directory contains WordPress plugins for experimentation and development. E
    - Hooks and filters
    - Changelog
 
-5. **Activate the plugin**:
+4. **Activate the plugin**:
    - Go to WordPress Admin → Plugins
    - Click "Activate" on your plugin
 
