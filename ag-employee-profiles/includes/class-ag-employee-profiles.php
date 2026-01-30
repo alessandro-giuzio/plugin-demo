@@ -156,7 +156,7 @@ class Ag_Employee_Profiles {
 
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_styles' );
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
-		$this->loader->add_action('init', $plugin_admin, 'register_employee_profile_cpt' );
+		$this->loader->add_action('init', $plugin_admin, 'register_employee_profile_cpt',0 );
 		$this->loader->add_action('save_post', $plugin_admin, 'save_employee_profile_metaboxes', 10, 1);
 		$this->loader->add_action('add_meta_boxes', $plugin_admin, 'add_employee_profile_metaboxes', 10, 2);
 

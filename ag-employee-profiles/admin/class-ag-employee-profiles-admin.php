@@ -100,18 +100,26 @@ class Ag_Employee_Profiles_Admin {
 
 	}
 	// Register Custom Post Type for Employee Profiles
+
+
 public function register_employee_profile_cpt() {
     $args = array(
-        'public'       => true,
-        'label'        => 'Employee Profiles',
-        'has_archive'  => false,
-        'rewrite'      => false,
-        'show_in_rest' => true,
-        'menu_icon'    => 'dashicons-businessman',
-        'supports'     => array( 'title', 'editor', 'thumbnail' ),
+        'public'        => true,
+        'label'         => 'Employee Profiles',
+        'labels'        => array(
+            'name'          => 'Employee Profiles',
+            'singular_name' => 'Employee Profile',
+        ),
+        'show_ui'       => true,
+        'show_in_menu'  => true,
+        'has_archive'   => true,
+        'show_in_rest'  => false,  // CHANGE This
+        'menu_icon'     => 'dashicons-businessman',
+        'supports'      => array( 'title', 'editor', 'thumbnail' ),
     );
     register_post_type( 'employee_profile', $args );
 }
+
 
 // Add Metaboxes to Employee Profile CPT
     public function add_employee_profile_metaboxes($post_type, $post)
