@@ -273,4 +273,13 @@ public function save_employee_profile_metaboxes($post_id) {
             }
         }
 }
+// Disable Gutenberg editor for Employee Profile CPT
+    public function disable_gutenberg_for_employee_profiles($use_block_editor, $post_type)
+    {
+        if ($post_type === 'employee_profile') {
+            return false;
+        }
+        return $use_block_editor;
+    }
+
 }
