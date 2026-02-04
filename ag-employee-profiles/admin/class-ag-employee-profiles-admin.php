@@ -44,7 +44,7 @@ class Ag_Employee_Profiles_Admin {
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
-	 * @param      string    $plugin_name       The name of this plugin.
+	 * @param      string    $plugin_name       The name of the plugin.
 	 * @param      string    $version    The version of this plugin.
 	 */
 	public function __construct( $plugin_name, $version ) {
@@ -100,12 +100,11 @@ class Ag_Employee_Profiles_Admin {
 
 	}
 	// Register Custom Post Type for Employee Profiles
-
-
 public function register_employee_profile_cpt() {
     $args = array(
         'public'        => true,
         'label'         => 'Employee Profiles',
+        'rewrite' =>array ( 'slug' => 'team' ),
         'labels'        => array(
             'name'          => 'Employee Profiles',
             'singular_name' => 'Employee Profile',
@@ -113,7 +112,7 @@ public function register_employee_profile_cpt() {
         'show_ui'       => true,
         'show_in_menu'  => true,
         'has_archive'   => true,
-        'show_in_rest'  => false,  // CHANGE This
+        'show_in_rest'  => true,  // CHANGE This
         'menu_icon'     => 'dashicons-businessman',
         'supports'      => array( 'title', 'editor', 'thumbnail' ),
     );
@@ -228,6 +227,24 @@ public function render_employee_profile_details_metabox( $post ) {
         <label for="employee_profile"><strong>Other Profile URL</strong></label><br>
         <input type="url" id="employee_profile" name="employee_profile" value="<?php echo esc_attr( $profile ); ?>" class="regular-text">
     </p>
+
+    <?php
+    // AG: Display UUID (read-only) for /team/{uuid} routing
+    $uuid = get_post_meta( $post->ID, '_ag_employee_uuid', true );
+    $uuid_display = ! empty( $uuid ) ? $uuid : 'Not generated yet — click Update to create it.';
+    ?>
+    <p style="margin-top:12px;">
+        <label for="ag_employee_uuid"><strong>Profile UUID</strong></label><br>
+        <input
+            type="text"
+            id="ag_employee_uuid"
+            class="regular-text"
+            value="<?php echo esc_attr( $uuid_display ); ?>"
+            readonly
+            onclick="this.select();"
+        >
+        <br>
+
     <?php
 }
 
@@ -250,7 +267,25 @@ public function save_employee_profile_metaboxes($post_id) {
             return;
         }
 
-        // 4) Save fields
+        // AG: Only handle Employee Profile CPT
+        if (get_post_type($post_id) !== 'employee_profile') {
+            return;
+        }
+
+        // AG: Ignore revisions
+        if (wp_is_post_revision($post_id)) {
+            return;
+        }
+
+        // 4) UUID generation + storage
+        $uuid_meta_key = '_ag_employee_uuid';
+        $existing_uuid = get_post_meta($post_id, $uuid_meta_key, true);
+        if (empty($existing_uuid)) {
+            $new_uuid = wp_generate_uuid4();
+            update_post_meta($post_id, $uuid_meta_key, $new_uuid);
+        }
+
+        // 5) Save fields
         $fields = array(
             'employee_job_title' => '_employee_job_title',
             'employee_department' => '_employee_department',

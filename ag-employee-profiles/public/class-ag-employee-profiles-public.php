@@ -99,6 +99,70 @@ class Ag_Employee_Profiles_Public {
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/ag-employee-profiles-public.js', array( 'jquery' ), $this->version, false );
 
 	}
+	// register a rewrite rule on init: Match/team/<uuid>/ internally route to:index.php?post_type=employee_profile&employee_uuid=<captured_uuid>
+	public function add_employee_profile_rewrite_rule()
+	{
+		add_rewrite_rule(
+			'^team/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/?$',
+			'index.php?employee_uuid=$matches[1]',
+			'top'
+		);
+	}
+  // add 'employee_uuid' to the list of recognized query vars
+	public function add_employee_uuid_query_var($vars)
+	{
+		$vars[] = 'employee_uuid';
+		return $vars;
+	}
+
+
+ // modify the main query to load employee_profile by UUID if 'employee_uuid' query var is present
+	public function maybe_load_employee_profile_by_uuid($query)
+	{
+		// AG: Only run on the frontend main query
+		if (is_admin() || !$query->is_main_query()) {
+			return;
+		}
+
+		$uuid = $query->get('employee_uuid');
+		if (empty($uuid)) {
+			return;
+		}
+
+		// AG: Find the employee_profile post ID by UUID meta
+		$posts = get_posts([
+			'post_type' => 'employee_profile',
+			'post_status' => 'publish',
+			'fields' => 'ids',
+			'posts_per_page' => 1,
+			'meta_key' => '_ag_employee_uuid',
+			'meta_value' => $uuid,
+		]);
+
+		$post_id = !empty($posts) ? (int) $posts[0] : 0;
+
+		// AG: If no match, let WP handle as 404 naturally
+		if (!$post_id) {
+			$query->set_404();
+			$query->is_404 = true;
+			return;
+		}
+
+		// AG: Convert the main query into a real single post query by ID
+		$query->set('post_type', 'employee_profile');
+		$query->set('p', $post_id);
+
+		// AG: Clear anything that could force archive-ish behavior
+		$query->set('name', '');
+		$query->set('employee_uuid', '');
+		$query->set('posts_per_page', 1);
+	}
+
+
+
+
+
+
 	// Load custom template for single employee profile
 	public function load_employee_profile_template($template)
 	{
@@ -110,5 +174,6 @@ class Ag_Employee_Profiles_Public {
 		}
 		return $template;
 	}
+
 
 }
