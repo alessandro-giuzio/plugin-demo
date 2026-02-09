@@ -214,5 +214,104 @@ class Ag_Employee_Profiles_Public {
 		return $template;
 	}
 
+	// AG: vCArd handler for employee profiles
+	public function dowload_employee_vcard(){
+
+	// Bssic UUID format check (matches routing regex)
+		$uuid = isset($_GET['uuid']) ? sanitize_text_field($_GET['uuid']) : '';
+		// Basic UUID format check (matches routing regex)
+		if (empty($uuid) || !preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $uuid)) {
+			status_header(400);
+			echo 'Invalid UUID';
+			exit;
+		}
+	// Find the profile by UUID meta
+	$ids = get_posts([
+		'post_type' => 'employee_profile',
+		'post_status' => 'publish',
+		'fields' => 'ids',
+		'posts_per_page' => 1,
+		'meta_key' => '_ag_employee_uuid',
+		'meta_value' => $uuid,
+	]);
+	if (empty($ids)) {
+		status_header(404);
+		echo 'Profile not found';
+		exit;
+	}
+	$post_id = (int) $ids[0];
+	// Collect data (title + meta)
+	  $full_name = get_the_title($post_id);
+	  $job_title = get_post_meta($post_id, '_ag_employee_job_title', true);
+	  $company = get_post_meta($post_id, '_ag_employee_company', true);
+	  $email = get_post_meta($post_id, '_ag_employee_email', true);
+	  $phone = get_post_meta($post_id, '_ag_employee_phone', true);
+	  $website = get_post_meta($post_id, '_ag_employee_website', true);
+
+	  $street = get_post_meta($post_id, '_ag_employee_street', true);
+	  $city = get_post_meta($post_id, '_ag_employee_city', true);
+	  $state = get_post_meta($post_id, '_ag_employee_state', true);
+	  $postal_code = get_post_meta($post_id, '_ag_employee_postal_code', true);
+	  $country = get_post_meta($post_id, '_ag_employee_country', true);
+
+	// Split name into first/last for vCard
+		$parts = preg_split('/\s+/', trim($full_name));
+		$last = $parts ? array_pop($parts) : '';
+		$first = $parts ? implode(' ', $parts) : $full_name;
+	// Build vCard
+		$lines = [];
+		$lines[] = 'BEGIN:VCARD';
+		$lines[] = 'VERSION:3.0';
+		$lines[] = 'N:' . $this->vcard_escape($last) . ';' . $this->vcard_escape($first) . ';;;';
+		$lines[] = 'FN:' . $this->vcard_escape($full_name);
+
+		if (!empty($company))
+			$lines[] = 'ORG:' . $this->vcard_escape($company);
+		if (!empty($job_title))
+			$lines[] = 'TITLE:' . $this->vcard_escape($job_title);
+		if (!empty($email))
+			$lines[] = 'EMAIL;TYPE=INTERNET:' . $this->vcard_escape($email);
+		if (!empty($phone))
+			$lines[] = 'TEL;TYPE=CELL:' . $this->vcard_escape($phone);
+		if (!empty($website))
+			$lines[] = 'URL:' . $this->vcard_escape($website);
+	// ADR: Street;City;State;PostalCode;Country
+		if (!empty($street) || !empty($city) || !empty($state) || !empty($postal_code) || !empty($country)) {
+			$adr = 'ADR;TYPE=WORK:;;' .
+				$this->vcard_escape($street) . ';' .
+				$this->vcard_escape($city) . ';' .
+				$this->vcard_escape($state) . ';' .
+				$this->vcard_escape($postal_code) . ';' .
+				$this->vcard_escape($country);
+			$lines[] = $adr;
+		}
+
+		$lines[] = 'END:VCARD';
+		$vcard = implode("\r\n", $lines);
+	// Dowload headers
+		$filename = sanitize_file_name(strtolower(str_replace(' ', '-', $full_name))) ?: 'employee-profile';
+		$filename .= '.vcf';
+
+		nocache_headers();
+		header('Content-Type: text/vcard; charset=utf-8');
+		header('Content-Disposition: attachment; filename="' . $filename . '"');
+		header('Content-Length: ' . strlen($vcard));
+
+		echo $vcard;
+		exit;
+
+	}
+	// Helper: vCard escaping
+	private function vcard_escape($value) {
+	$value = (string) $value;
+	$value = str_replace(["\r\n", "\r", "\n"], '\\n', $value);
+	$value = str_replace([';', ','], ['\;', '\,'], $value);
+	return $value;}
+
 
 }
+
+
+// Register the AJAX actions (public + logged-in)
+// Add the Dowload button in the remplate
+// Test

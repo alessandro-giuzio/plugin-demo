@@ -19,6 +19,9 @@ $country = get_post_meta(get_the_ID(), '_employee_country', true);
 $facebook = get_post_meta(get_the_ID(), '_employee_facebook', true);
 $twitter = get_post_meta(get_the_ID(), '_employee_twitter', true);
 $profile = get_post_meta(get_the_ID(), '_employee_profile', true);
+
+$uuid = get_post_meta(get_the_ID(), '_ag_employee_uuid', true);
+$download_url = admin_url('admin-ajax.php?action=ag_employee_vcard&uuid=' . rawurlencode($uuid));
 ?>
 
 <div class="employee-profile">
@@ -98,6 +101,8 @@ $profile = get_post_meta(get_the_ID(), '_employee_profile', true);
     <?php the_content(); ?>
   </div>
 </div>
-
+<a href="<?php echo esc_url($download_url); ?>" class="button">
+  Download vCard
+</a>
 <?php
 get_footer();

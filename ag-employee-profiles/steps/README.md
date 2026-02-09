@@ -73,3 +73,28 @@ This document summarises what has been implemented so far for the **/team/{uuid}
   - The query is explicitly pushed out of archive/home mode and given a real `queried_object` so WordPress chooses the single template instead of the archive.
 
 ---
+
+## Step 4 — vCard download endpoint + button ✅
+
+### Files
+
+- [public/class-ag-employee-profiles-public.php](../public/class-ag-employee-profiles-public.php)
+- [includes/class-ag-employee-profiles.php](../includes/class-ag-employee-profiles.php)
+- [templates/single-employee_profile.php](../templates/single-employee_profile.php)
+
+### What was done (plain English)
+
+- **Added a vCard download handler**
+  - A public AJAX endpoint builds a vCard for the employee profile found by UUID.
+  - The handler validates the UUID, looks up the profile by `_ag_employee_uuid`, and returns a `.vcf` file.
+
+- **Hooked the AJAX action for logged-in and public users**
+  - The action is registered for both `wp_ajax_ag_employee_vcard` and `wp_ajax_nopriv_ag_employee_vcard` so it works for everyone.
+
+- **Added a download button on the single profile template**
+  - The template now builds a URL like `admin-ajax.php?action=ag_employee_vcard&uuid=...` and renders a "Download vCard" button.
+
+- **Escaped vCard fields safely**
+  - A small helper ensures commas, semicolons, and line breaks are escaped to keep the vCard valid.
+
+---

@@ -184,6 +184,8 @@ class Ag_Employee_Profiles {
 		$this->loader->add_filter('query_vars', $plugin_public, 'add_employee_uuid_query_var');
 		$this->loader->add_filter('request', $plugin_public, 'capture_employee_uuid_request');
 		$this->loader->add_action('pre_get_posts', $plugin_public, 'maybe_load_employee_profile_by_uuid', 1);
+		$this->loader->add_action('wp_ajax_ag_employee_vcard', $plugin_public, 'download_employee_vcard');
+		$this->loader->add_action('wp_ajax_nopriv_ag_employee_vcard', $plugin_public, 'download_employee_vcard');
 
 
 
