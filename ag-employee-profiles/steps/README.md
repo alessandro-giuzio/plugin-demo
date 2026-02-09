@@ -48,3 +48,28 @@ This document summarises what has been implemented so far for the **/team/{uuid}
   - This lets editors copy the UUID for testing `/team/{uuid}` directly from wp-admin.
 
 ---
+
+## Step 3 — Fix `/team/{uuid}` routing + template selection ✅
+
+### Files
+
+- [public/class-ag-employee-profiles-public.php](../public/class-ag-employee-profiles-public.php)
+- [includes/class-ag-employee-profiles.php](../includes/class-ag-employee-profiles.php)
+- [includes/class-ag-employee-profiles-activator.php](../includes/class-ag-employee-profiles-activator.php)
+- [includes/class-ag-employee-profiles-deactivator.php](../includes/class-ag-employee-profiles-deactivator.php)
+
+### What was done (plain English)
+
+- **Make the rewrite rule reliable and flush it on activation**
+  - On plugin activation, the Employee Profile CPT and the `/team/{uuid}` rule are registered and permalinks are flushed.
+  - On deactivation, permalinks are flushed again to remove the custom rule.
+
+- **Ensure WordPress recognizes the UUID in the URL**
+  - A rewrite tag is added for `employee_uuid` and the rewrite rule now passes both `post_type=employee_profile` and the UUID into the query.
+  - A request-level fallback was added so `/team/{uuid}` still works even if rewrite rules are bypassed (it inspects the request path and injects `employee_uuid`).
+
+- **Force a real single post query when a UUID matches**
+  - The UUID lookup runs very early and, when a match is found, the main query is converted into a single `employee_profile` query by ID.
+  - The query is explicitly pushed out of archive/home mode and given a real `queried_object` so WordPress chooses the single template instead of the archive.
+
+---

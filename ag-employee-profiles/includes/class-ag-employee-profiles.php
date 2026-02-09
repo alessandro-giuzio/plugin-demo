@@ -182,7 +182,8 @@ class Ag_Employee_Profiles {
 		$this->loader->add_filter('template_include', $plugin_public, 'load_employee_profile_template');
 		$this->loader->add_action('init', $plugin_public, 'add_employee_profile_rewrite_rule');
 		$this->loader->add_filter('query_vars', $plugin_public, 'add_employee_uuid_query_var');
-		$this->loader->add_action('pre_get_posts', $plugin_public, 'maybe_load_employee_profile_by_uuid');
+		$this->loader->add_filter('request', $plugin_public, 'capture_employee_uuid_request');
+		$this->loader->add_action('pre_get_posts', $plugin_public, 'maybe_load_employee_profile_by_uuid', 1);
 
 
 

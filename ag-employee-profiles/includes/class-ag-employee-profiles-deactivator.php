@@ -30,7 +30,7 @@ class Ag_Employee_Profiles_Deactivator {
 	 * @since    1.0.0
 	 */
 	public static function deactivate() {
-
+		flush_rewrite_rules();
 	}
 
 }

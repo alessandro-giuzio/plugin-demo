@@ -102,9 +102,10 @@ class Ag_Employee_Profiles_Public {
 	// register a rewrite rule on init: Match/team/<uuid>/ internally route to:index.php?post_type=employee_profile&employee_uuid=<captured_uuid>
 	public function add_employee_profile_rewrite_rule()
 	{
+		add_rewrite_tag( '%employee_uuid%', '([0-9a-fA-F-]{36})' );
 		add_rewrite_rule(
 			'^team/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/?$',
-			'index.php?employee_uuid=$matches[1]',
+			'index.php?post_type=employee_profile&employee_uuid=$matches[1]',
 			'top'
 		);
 	}
@@ -112,6 +113,27 @@ class Ag_Employee_Profiles_Public {
 	public function add_employee_uuid_query_var($vars)
 	{
 		$vars[] = 'employee_uuid';
+		return $vars;
+	}
+
+	// Ensure UUID requests are captured even if rewrite rules are bypassed.
+	public function capture_employee_uuid_request( $vars )
+	{
+		if ( is_admin() ) {
+			return $vars;
+		}
+
+		if ( ! empty( $vars['employee_uuid'] ) ) {
+			return $vars;
+		}
+
+		$uri = isset( $_SERVER['REQUEST_URI'] ) ? (string) $_SERVER['REQUEST_URI'] : '';
+		$path = trim( (string) wp_parse_url( $uri, PHP_URL_PATH ), '/' );
+		if ( preg_match( '#^team/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})/?$#', $path, $matches ) ) {
+			$vars['employee_uuid'] = $matches[1];
+			$vars['post_type'] = 'employee_profile';
+		}
+
 		return $vars;
 	}
 
@@ -125,6 +147,12 @@ class Ag_Employee_Profiles_Public {
 		}
 
 		$uuid = $query->get('employee_uuid');
+		if (empty($uuid)) {
+			$name = $query->get('name');
+			if (!empty($name) && preg_match('/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/', $name)) {
+				$uuid = $name;
+			}
+		}
 		if (empty($uuid)) {
 			return;
 		}
@@ -151,11 +179,22 @@ class Ag_Employee_Profiles_Public {
 		// AG: Convert the main query into a real single post query by ID
 		$query->set('post_type', 'employee_profile');
 		$query->set('p', $post_id);
+		$query->set('pagename', '');
+		$query->set('page_id', 0);
 
 		// AG: Clear anything that could force archive-ish behavior
 		$query->set('name', '');
 		$query->set('employee_uuid', '');
 		$query->set('posts_per_page', 1);
+
+		// AG: Force single state so template selection doesn't fall back to archive
+		$query->is_home = false;
+		$query->is_archive = false;
+		$query->is_post_type_archive = false;
+		$query->is_singular = true;
+		$query->is_single = true;
+		$query->queried_object = get_post( $post_id );
+		$query->queried_object_id = $post_id;
 	}
 
 

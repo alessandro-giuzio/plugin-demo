@@ -30,7 +30,19 @@ class Ag_Employee_Profiles_Activator {
 	 * @since    1.0.0
 	 */
 	public static function activate() {
+		$plugin_name = 'ag-employee-profiles';
+		$version = defined( 'AG_EMPLOYEE_PROFILES_VERSION' ) ? AG_EMPLOYEE_PROFILES_VERSION : '1.0.0';
 
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/class-ag-employee-profiles-admin.php';
+		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-ag-employee-profiles-public.php';
+
+		$plugin_admin = new Ag_Employee_Profiles_Admin( $plugin_name, $version );
+		$plugin_admin->register_employee_profile_cpt();
+
+		$plugin_public = new Ag_Employee_Profiles_Public( $plugin_name, $version );
+		$plugin_public->add_employee_profile_rewrite_rule();
+
+		flush_rewrite_rules();
 	}
 
 }
