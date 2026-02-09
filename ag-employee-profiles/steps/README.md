@@ -2,9 +2,9 @@
 
 This document summarises what has been implemented so far for the **/team/{uuid}** employee profile routing and UUID storage.
 
----
-
 ## Step 1 — CPT + `/team/{uuid}` routing ✅
+
+**Date finished:** Not recorded
 
 ### Files
 
@@ -32,6 +32,8 @@ This document summarises what has been implemented so far for the **/team/{uuid}
 
 ## Step 2 — UUID generation + storage ✅
 
+**Date finished:** Not recorded
+
 ### File
 
 - [admin/class-ag-employee-profiles-admin.php](../admin/class-ag-employee-profiles-admin.php)
@@ -50,6 +52,8 @@ This document summarises what has been implemented so far for the **/team/{uuid}
 ---
 
 ## Step 3 — Fix `/team/{uuid}` routing + template selection ✅
+
+**Date finished:** 9 Feb 2026
 
 ### Files
 
@@ -75,6 +79,8 @@ This document summarises what has been implemented so far for the **/team/{uuid}
 ---
 
 ## Step 4 — vCard download endpoint + button ✅
+
+**Date finished:** 9 Feb 2026
 
 ### Files
 
