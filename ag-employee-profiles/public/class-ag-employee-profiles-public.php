@@ -215,7 +215,7 @@ class Ag_Employee_Profiles_Public {
 	}
 
 	// AG: vCArd handler for employee profiles
-	public function dowload_employee_vcard(){
+	public function download_employee_vcard(){
 
 	// Bssic UUID format check (matches routing regex)
 		$uuid = isset($_GET['uuid']) ? sanitize_text_field($_GET['uuid']) : '';
