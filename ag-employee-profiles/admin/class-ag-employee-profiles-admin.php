@@ -316,5 +316,21 @@ public function save_employee_profile_metaboxes($post_id) {
         }
         return $use_block_editor;
     }
+    // Add settings submenu under Employee Profiles CPT
+    public function add_employee_profiles_admin_menu() {
+        add_submenu_page(
+            'edit.php?post_type=employee_profile',
+            'Employee Profiles Settings',
+            'Settings',
+            'manage_options',
+            'employee-profiles-settings',
+            array($this, 'render_employee_profiles_settings_page')
+        );
+    }
+
+    public function render_employee_profiles_settings_page() {
+        // Render the settings page content here
+        echo '<div class="wrap"><h1>Employee Profiles Settings</h1><p>Settings content goes here.</p></div>';
+    }
 
 }
