@@ -309,9 +309,45 @@ class Ag_Employee_Profiles_Public {
 	return $value;}
 
 
+	// employee shortcode handler to show a list of employee profiles + search
+	public function register_shortcodes()
+	{
+		add_shortcode('employee_profiles', [$this, 'employee_profiles']);
+	}
+	public function employee_profiles(){
+		// show all publishe profiles
+		$profiles = get_posts([
+			'post_type' => 'employee_profile',
+			'post_status' => 'publish',
+			'numberposts' => -1,
+		]);
+		// includes a search input
+		ob_start();
+		?>
+		<p>
+				<input
+						type="text"
+						id="ag-employee-search"
+						placeholder="Search employees..."
+						style="width: 100%; max-width: 400px; padding: 8px; margin-bottom: 20px;"
+				>
+		</p>
+		<div id="ag-employee-list">
+		<?php
+		foreach ($profiles as $profile) {
+			$uuid = get_post_meta($profile->ID, '_ag_employee_uuid', true);
+			$url = $uuid ? home_url('/team/' . $uuid) : get_permalink($profile);
+			?>
+			<div class="ag-employee-profile" data-name="<?php echo esc_attr(strtolower(get_the_title($profile->ID))); ?>">
+				<h3><a href="<?php echo esc_url($url); ?>"><?php echo esc_html(get_the_title($profile->ID)); ?></a></h3>
+				<p><?php echo esc_html(get_post_meta($profile->ID, '_ag_employee_job_title', true)); ?></p>
+			</div>
+			<?php
+
+	}
+		?>
+		</div>
+		<?php
+		return ob_get_clean();
+	}
 }
-
-
-// Register the AJAX actions (public + logged-in)
-// Add the Dowload button in the remplate
-// Test

@@ -163,6 +163,7 @@ class Ag_Employee_Profiles {
 		$this->loader->add_action('admin_menu', $plugin_admin, 'add_employee_profiles_admin_menu');
 		$this->loader->add_action('admin_init', $plugin_admin, 'register_settings');
 		$this->loader->add_action('admin_init', $plugin_admin, 'register_settings_fields');
+	/* 	$this->loader->add_action('admin_init', $plugin_admin, 'employee_profiles'); */
 
 
 
@@ -189,6 +190,8 @@ class Ag_Employee_Profiles {
 		$this->loader->add_action('pre_get_posts', $plugin_public, 'maybe_load_employee_profile_by_uuid', 1);
 		$this->loader->add_action('wp_ajax_ag_employee_vcard', $plugin_public, 'download_employee_vcard');
 		$this->loader->add_action('wp_ajax_nopriv_ag_employee_vcard', $plugin_public, 'download_employee_vcard');
+		$this->loader->add_action('init', $plugin_public, 'register_shortcodes');
+
 
 
 
@@ -240,6 +243,11 @@ class Ag_Employee_Profiles {
 	 */
 	public function get_version() {
 		return $this->version;
+	}
+
+	public function register_shortcodes()
+	{
+		add_shortcode('employee_profiles', [$this, 'employee_profiles']);
 	}
 
 }
