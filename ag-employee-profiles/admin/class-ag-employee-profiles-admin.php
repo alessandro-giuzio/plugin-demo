@@ -244,6 +244,8 @@ public function render_employee_profile_details_metabox( $post ) {
             onclick="this.select();"
         >
         <br>
+    </p>
+
 
     <?php
 }
@@ -327,10 +329,77 @@ public function save_employee_profile_metaboxes($post_id) {
             array($this, 'render_employee_profiles_settings_page')
         );
     }
+    // Register settings for Employee Profiles
+    public function register_settings() {
+        register_setting(
+            'ag_employee_profiles_settings',
+            'ag_employee_route_mode',
+            array(
+                'type'              => 'string',
+                'sanitize_callback' => array($this, 'sanitize_route_mode'),
+                'default'           => 'slug',
+            )
+        );
+    }
+
+    public function register_settings_fields() {
+        // AG: Register settings section for Employee Profiles
+        add_settings_section(
+            'ag_employee_profiles_section',
+            'Route Configuration',
+            array($this, 'render_settings_section'),
+            'ag_employee_profiles_settings'
+        );
+
+        // AG: Register the route mode field
+        add_settings_field(
+            'ag_employee_route_mode',
+            'Route Mode',
+            array($this, 'render_route_mode_field'),
+            'ag_employee_profiles_settings',
+            'ag_employee_profiles_section'
+        );
+    }
+
+    public function render_settings_section() {
+        echo '<p>Choose how employee profiles are routed and accessed.</p>';
+        echo '<p><code>Current: ' . esc_html(get_option('ag_employee_route_mode', 'slug')) . '</code></p>';
+    }
+
+    public function render_route_mode_field() {
+        $route_mode = get_option('ag_employee_route_mode', 'slug');
+        ?>
+        <select id="ag_employee_route_mode" name="ag_employee_route_mode">
+            <option value="slug" <?php selected($route_mode, 'slug'); ?>>Use Slug (e.g. /team/john-doe)</option>
+            <option value="uuid" <?php selected($route_mode, 'uuid'); ?>>Use UUID (e.g. /team/123e4567-e89b-12d3-a456-426614174000)</option>
+        </select>
+        <?php
+    }
+
+    public function sanitize_route_mode($value) {
+        $value = is_string($value) ? sanitize_text_field($value) : '';
+
+        if (!in_array($value, array('slug', 'uuid'), true)) {
+            return 'slug';
+        }
+
+        return $value;
+    }
 
     public function render_employee_profiles_settings_page() {
-        // Render the settings page content here
-        echo '<div class="wrap"><h1>Employee Profiles Settings</h1><p>Settings content goes here.</p></div>';
+        ?>
+        <div class="wrap">
+            <h1>Employee Profiles Settings</h1>
+            <form method="post" action="options.php">
+                <?php
+                settings_fields('ag_employee_profiles_settings');
+                do_settings_sections('ag_employee_profiles_settings');
+                submit_button();
+                ?>
+            </form>
+        </div>
+        <?php
     }
+
 
 }

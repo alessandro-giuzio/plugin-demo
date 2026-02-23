@@ -161,6 +161,8 @@ class Ag_Employee_Profiles {
 		$this->loader->add_action('add_meta_boxes', $plugin_admin, 'add_employee_profile_metaboxes', 10, 2);
 		$this->loader->add_filter('use_block_editor_for_post_type', $plugin_admin, 'disable_gutenberg_for_employee_profiles', 10, 2);
 		$this->loader->add_action('admin_menu', $plugin_admin, 'add_employee_profiles_admin_menu');
+		$this->loader->add_action('admin_init', $plugin_admin, 'register_settings');
+		$this->loader->add_action('admin_init', $plugin_admin, 'register_settings_fields');
 
 
 
