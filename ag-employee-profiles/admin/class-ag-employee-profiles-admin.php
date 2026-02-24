@@ -386,6 +386,14 @@ public function save_employee_profile_metaboxes($post_id) {
         return $value;
     }
 
+    public function maybe_flush_rewrite_on_route_mode_change($old_value, $value) {
+        if ($old_value === $value) {
+            return;
+        }
+
+        flush_rewrite_rules();
+    }
+
     public function render_employee_profiles_settings_page() {
         ?>
         <div class="wrap">

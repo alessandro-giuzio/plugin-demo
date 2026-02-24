@@ -41,6 +41,13 @@ class Ag_Employee_Profiles_Public {
 	private $version;
 
 	/**
+	 * Current routing mode (slug or uuid).
+	 *
+	 * @var string
+	 */
+	private $route_mode = 'slug';
+
+	/**
 	 * Initialize the class and set its properties.
 	 *
 	 * @since    1.0.0
@@ -51,6 +58,13 @@ class Ag_Employee_Profiles_Public {
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+		$this->route_mode = $this->determine_route_mode();
+
+	}
+
+	private function determine_route_mode() {
+		$mode = get_option('ag_employee_route_mode', 'slug');
+		return in_array($mode, ['slug', 'uuid'], true) ? $mode : 'slug';
 
 	}
 
@@ -138,7 +152,7 @@ class Ag_Employee_Profiles_Public {
 	}
 
 
- // modify the main query to load employee_profile by UUID if 'employee_uuid' query var is present
+	// modify the main query to load employee_profile by UUID if 'employee_uuid' query var is present
 	public function maybe_load_employee_profile_by_uuid($query)
 	{
 		// AG: Only run on the frontend main query
@@ -187,14 +201,7 @@ class Ag_Employee_Profiles_Public {
 		$query->set('employee_uuid', '');
 		$query->set('posts_per_page', 1);
 
-		// AG: Force single state so template selection doesn't fall back to archive
-		$query->is_home = false;
-		$query->is_archive = false;
-		$query->is_post_type_archive = false;
-		$query->is_singular = true;
-		$query->is_single = true;
-		$query->queried_object = get_post( $post_id );
-		$query->queried_object_id = $post_id;
+		$this->mark_employee_profile_single($query, $post_id);
 	}
 
 
@@ -305,8 +312,59 @@ class Ag_Employee_Profiles_Public {
 	private function vcard_escape($value) {
 	$value = (string) $value;
 	$value = str_replace(["\r\n", "\r", "\n"], '\\n', $value);
-	$value = str_replace([';', ','], ['\;', '\,'], $value);
+	$value = str_replace([';', ','], ['\\;', '\\,'], $value);
 	return $value;}
+
+	private function mark_employee_profile_single($query, $post_id) {
+		$query->is_home = false;
+		$query->is_archive = false;
+		$query->is_post_type_archive = false;
+		$query->is_singular = true;
+		$query->is_single = true;
+		$query->queried_object = get_post( $post_id );
+		$query->queried_object_id = $post_id;
+	}
+
+	private function get_employee_profile_url($post_id) {
+		if ($this->route_mode === 'uuid') {
+			$uuid = get_post_meta($post_id, '_ag_employee_uuid', true);
+			if (!empty($uuid)) {
+				return home_url('/team/' . $uuid);
+			}
+		}
+
+		return get_permalink($post_id);
+	}
+
+	public function enforce_canonical_employee_profile_url() {
+		if (!is_singular('employee_profile')) {
+			return;
+		}
+
+		global $post;
+		if (!$post instanceof WP_Post) {
+			return;
+		}
+
+		$canonical = $this->get_employee_profile_url($post->ID);
+		if (empty($canonical)) {
+			return;
+		}
+
+		$canonical_path = trim((string) wp_parse_url($canonical, PHP_URL_PATH), '/');
+		$current_path = $this->get_current_request_path();
+
+		if ($canonical_path && $current_path && $canonical_path !== $current_path) {
+			wp_safe_redirect($canonical, 301);
+			exit;
+		}
+	}
+
+	private function get_current_request_path() {
+		global $wp;
+		$request = isset($wp->request) ? (string) $wp->request : '';
+		return trim($request, '/');
+	}
 
 
 	// employee shortcode handler to show a list of employee profiles + search
@@ -334,8 +392,7 @@ public function register_shortcodes() {
 		<div id="ag-employee-list">
 		<?php
 		foreach ($profiles as $profile) {
-			$uuid = get_post_meta($profile->ID, '_ag_employee_uuid', true);
-			$url = $uuid ? home_url('/team/' . $uuid) : get_permalink($profile);
+			$url = $this->get_employee_profile_url($profile->ID);
 			?>
 			<div class="ag-employee-profile" data-name="<?php echo esc_attr(strtolower(get_the_title($profile->ID))); ?>">
 				<h3><a href="<?php echo esc_url($url); ?>"><?php echo esc_html(get_the_title($profile->ID)); ?></a></h3>

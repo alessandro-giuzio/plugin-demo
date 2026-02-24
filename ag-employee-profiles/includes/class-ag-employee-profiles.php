@@ -163,6 +163,7 @@ class Ag_Employee_Profiles {
 		$this->loader->add_action('admin_menu', $plugin_admin, 'add_employee_profiles_admin_menu');
 		$this->loader->add_action('admin_init', $plugin_admin, 'register_settings');
 		$this->loader->add_action('admin_init', $plugin_admin, 'register_settings_fields');
+		$this->loader->add_action('update_option_ag_employee_route_mode', $plugin_admin, 'maybe_flush_rewrite_on_route_mode_change', 10, 2);
 	/* 	$this->loader->add_action('admin_init', $plugin_admin, 'employee_profiles'); */
 
 
@@ -188,6 +189,7 @@ class Ag_Employee_Profiles {
 		$this->loader->add_filter('query_vars', $plugin_public, 'add_employee_uuid_query_var');
 		$this->loader->add_filter('request', $plugin_public, 'capture_employee_uuid_request');
 		$this->loader->add_action('pre_get_posts', $plugin_public, 'maybe_load_employee_profile_by_uuid', 1);
+		$this->loader->add_action('template_redirect', $plugin_public, 'enforce_canonical_employee_profile_url');
 		$this->loader->add_action('wp_ajax_ag_employee_vcard', $plugin_public, 'download_employee_vcard');
 		$this->loader->add_action('wp_ajax_nopriv_ag_employee_vcard', $plugin_public, 'download_employee_vcard');
 		$this->loader->add_action('init', $plugin_public, 'register_shortcodes');
