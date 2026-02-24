@@ -104,3 +104,25 @@ This document summarises what has been implemented so far for the **/team/{uuid}
   - A small helper ensures commas, semicolons, and line breaks are escaped to keep the vCard valid.
 
 ---
+
+## Step 5 — Route mode toggle (Slug ⇄ UUID) ✅
+
+**Date finished:** 24 Feb 2026
+
+### Files
+
+- [admin/class-ag-employee-profiles-admin.php](../admin/class-ag-employee-profiles-admin.php)
+- [includes/class-ag-employee-profiles.php](../includes/class-ag-employee-profiles.php)
+- [public/class-ag-employee-profiles-public.php](../public/class-ag-employee-profiles-public.php)
+
+### What was done (plain English)
+
+- **Settings UI now controls routing mode**
+  - Added a sanitized option `ag_employee_route_mode` (slug or uuid) with automatic rewrite flushing whenever the value changes.
+- **Runtime routing honors the selected mode**
+  - Public rewrite/query handling detects the option and generates canonical profile URLs through a central helper.
+  - `template_redirect` enforces the canonical format: requesting the “wrong” format loads the profile, then 301-redirects to the active mode.
+- **Shortcode links stay consistent**
+  - The `[employee_profiles]` shortcode now uses the same helper, ensuring list links match the currently selected routing style.
+
+---
