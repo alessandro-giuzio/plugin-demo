@@ -310,10 +310,9 @@ class Ag_Employee_Profiles_Public {
 
 
 	// employee shortcode handler to show a list of employee profiles + search
-	public function register_shortcodes()
-	{
-		add_shortcode('employee_profiles', [$this, 'employee_profiles']);
-	}
+public function register_shortcodes() {
+	add_shortcode('employee_profiles', [$this, 'employee_profiles']);
+}
 	public function employee_profiles(){
 		// show all publishe profiles
 		$profiles = get_posts([
