@@ -125,4 +125,34 @@ This document summarises what has been implemented so far for the **/team/{uuid}
 - **Shortcode links stay consistent**
   - The `[employee_profiles]` shortcode now uses the same helper, ensuring list links match the currently selected routing style.
 
----
+  ## Step 6 — AJAX PHP filtering for employee profiles ✅
+
+**Date finished:** 18 Mar 2026
+
+### Files
+
+- [public/class-ag-employee-profiles-public.php](../public/class-ag-employee-profiles-public.php)
+- [includes/class-ag-employee-profiles.php](../includes/class-ag-employee-profiles.php)
+- [public/js/ag-employee-profiles-public.js](../public/js/ag-employee-profiles-public.js)
+
+### What was done (plain English)
+
+- **Passed AJAX credentials to JavaScript via `wp_localize_script`**
+  - The AJAX endpoint URL and a nonce are injected into the page as the `agEmployeeAjax` JS object so the browser can make authenticated requests.
+
+- **Registered the AJAX action for all users**
+  - `wp_ajax_ag_employee_filter` and `wp_ajax_nopriv_ag_employee_filter` both point to `filter_employee_profiles()`, covering both logged-in and public visitors.
+
+- **Built the server-side filter handler `filter_employee_profiles()`**
+  - Verifies the nonce, sanitizes `search` and `department` inputs.
+  - Search runs two `WP_Query` calls (one on post title via `s`, one on `_employee_job_title` via meta LIKE) and merges the IDs with OR logic.
+  - Department filter narrows results with a meta `=` comparison on `_employee_department`.
+  - Returns rendered employee card HTML as JSON.
+
+- **Updated the `[employee_profiles]` shortcode**
+  - Added a `<select>` dropdown populated from distinct `_employee_department` meta values in the database.
+  - Initial render remains server-side for progressive enhancement (works without JS).
+
+- **Written the JavaScript**
+  - Debounced `keyup` on the search input (300 ms) and `change` on the department dropdown both trigger a `$.post()` to `admin-ajax.php`.
+  - The response HTML replaces the contents of `#ag-employee-list`.

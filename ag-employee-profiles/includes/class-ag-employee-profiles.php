@@ -192,6 +192,9 @@ class Ag_Employee_Profiles {
 		$this->loader->add_action('template_redirect', $plugin_public, 'enforce_canonical_employee_profile_url');
 		$this->loader->add_action('wp_ajax_ag_employee_vcard', $plugin_public, 'download_employee_vcard');
 		$this->loader->add_action('wp_ajax_nopriv_ag_employee_vcard', $plugin_public, 'download_employee_vcard');
+		$this->loader->add_action('wp_ajax_ag_employee_filter', $plugin_public, 'filter_employee_profiles');
+		$this->loader->add_action('wp_ajax_nopriv_ag_employee_filter', $plugin_public, 'filter_employee_profiles');
+
 		$this->loader->add_action('init', $plugin_public, 'register_shortcodes');
 
 

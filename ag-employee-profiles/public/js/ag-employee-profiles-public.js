@@ -1,32 +1,38 @@
-(function( $ ) {
-	'use strict';
+(function ($) {
+  'use strict';
 
-	/**
-	 * All of the code for your public-facing JavaScript source
-	 * should reside in this file.
-	 *
-	 * Note: It has been assumed you will write jQuery code here, so the
-	 * $ function reference has been prepared for usage within the scope
-	 * of this function.
-	 *
-	 * This enables you to define handlers, for when the DOM is ready:
-	 *
-	 * $(function() {
-	 *
-	 * });
-	 *
-	 * When the window is loaded:
-	 *
-	 * $( window ).load(function() {
-	 *
-	 * });
-	 *
-	 * ...and/or other possibilities.
-	 *
-	 * Ideally, it is not considered best practise to attach more than a
-	 * single DOM-ready or window-load handler for a particular page.
-	 * Although scripts in the WordPress core, Plugins and Themes may be
-	 * practising this, we should strive to set a better example in our own work.
-	 */
+  $(function () {
+    var debounceTimer;
 
-})( jQuery );
+    function fetchEmployees() {
+      $.post(
+        agEmployeeAjax.url,
+        {
+          action: 'ag_employee_filter',
+          nonce: agEmployeeAjax.nonce,
+          search: $('#ag-employee-search').val(),
+          department: $('#ag-employee-department').val() || '',
+          company: $('#ag-employee-company').val() || '',
+          website: $('#ag-employee-website').val() || '',
+        },
+        function (response) {
+          if (response.success) {
+            $('#ag-employee-list').html(response.data.html);
+          }
+        },
+      );
+    }
+
+    $('#ag-employee-search').on('keyup', function () {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(fetchEmployees, 300);
+    });
+
+    $('#ag-employee-department').on('change', fetchEmployees);
+    $('#ag-employee-company').on('change', fetchEmployees);
+    $('#ag-employee-website').on('keyup', function () {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(fetchEmployees, 300);
+    });
+  });
+})(jQuery);

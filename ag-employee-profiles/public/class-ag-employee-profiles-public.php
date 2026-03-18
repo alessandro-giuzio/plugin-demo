@@ -111,6 +111,16 @@ class Ag_Employee_Profiles_Public {
 		 */
 
 		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/ag-employee-profiles-public.js', array( 'jquery' ), $this->version, false );
+    // Localize script for AJAX
+		wp_localize_script(
+			$this->plugin_name,
+			'agEmployeeAjax',
+			[
+				'url' => admin_url('admin-ajax.php'),
+				'nonce' => wp_create_nonce('ag_employee_filter'),
+			]
+		);
+
 
 	}
 	// register a rewrite rule on init: Match/team/<uuid>/ internally route to:index.php?post_type=employee_profile&employee_uuid=<captured_uuid>
@@ -308,6 +318,94 @@ class Ag_Employee_Profiles_Public {
 		exit;
 
 	}
+ // AJAX handler for employee profile filtering
+	public function filter_employee_profiles() {
+    check_ajax_referer( 'ag_employee_filter', 'nonce' );
+
+    $search     = sanitize_text_field( $_POST['search']     ?? '' );
+    $department = sanitize_text_field( $_POST['department'] ?? '' );
+		$company = sanitize_text_field($_POST['company'] ?? '');
+		$website = sanitize_text_field($_POST['website'] ?? '');
+
+
+		$base_args = [
+        'post_type'      => 'employee_profile',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+    ];
+
+    $args = [
+        'post_type'      => 'employee_profile',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'orderby'        => 'title',
+        'order'          => 'ASC',
+    ];
+
+    // Department filter — narrows results to one department
+		$meta_filters = [];
+
+		if (!empty($department)) {
+			$meta_filters[] = ['key' => '_employee_department', 'value' => $department, 'compare' => '='];
+		}
+
+		if (!empty($company)) {
+			$meta_filters[] = ['key' => '_employee_company', 'value' => $company, 'compare' => '='];
+		}
+
+		if (!empty($website)) {
+			$meta_filters[] = ['key' => '_employee_website', 'value' => $website, 'compare' => 'LIKE'];
+		}
+
+		if (!empty($meta_filters)) {
+			$meta_filters['relation'] = 'AND';
+			$args['meta_query'] = $meta_filters;
+		}
+
+
+		// Search: OR across post title + job title meta
+    if ( ! empty( $search ) ) {
+        $title_query = new WP_Query( array_merge( $base_args, [ 's' => $search ] ) );
+        $title_ids   = $title_query->posts;
+
+        $meta_query_result = new WP_Query( array_merge( $base_args, [
+            'meta_query' => [
+                [ 'key' => '_employee_job_title', 'value' => $search, 'compare' => 'LIKE' ],
+            ],
+        ] ) );
+        $meta_ids = $meta_query_result->posts;
+
+        $merged_ids = array_unique( array_merge( $title_ids, $meta_ids ) );
+
+        if ( empty( $merged_ids ) ) {
+            wp_send_json_success( [ 'html' => '<p>No employees found.</p>', 'count' => 0 ] );
+        }
+
+        $args['post__in'] = $merged_ids;
+    }
+
+    $query = new WP_Query( $args );
+
+    ob_start();
+    foreach ( $query->posts as $profile ) {
+        $url = $this->get_employee_profile_url( $profile->ID );
+        ?>
+        <div class="ag-employee-profile" data-name="<?php echo esc_attr( strtolower( get_the_title( $profile->ID ) ) ); ?>">
+            <h3><a href="<?php echo esc_url( $url ); ?>"><?php echo esc_html( get_the_title( $profile->ID ) ); ?></a></h3>
+            <p><?php echo esc_html( get_post_meta( $profile->ID, '_employee_job_title', true ) ); ?></p>
+        </div>
+        <?php
+    }
+    $html = ob_get_clean();
+
+    if ( empty( $html ) ) {
+        $html = '<p>No employees found.</p>';
+    }
+
+    wp_send_json_success( [ 'html' => $html, 'count' => $query->found_posts ] );
+}
+
 	// Helper: vCard escaping
 	private function vcard_escape($value) {
 	$value = (string) $value;
@@ -371,39 +469,95 @@ class Ag_Employee_Profiles_Public {
 public function register_shortcodes() {
 	add_shortcode('employee_profiles', [$this, 'employee_profiles']);
 }
-	public function employee_profiles(){
-		// show all publishe profiles
+	public function employee_profiles()
+	{
+		// Fetch distinct department values for the dropdown
+		global $wpdb;
+		$departments = $wpdb->get_col(
+			"SELECT DISTINCT meta_value
+         FROM {$wpdb->postmeta}
+         INNER JOIN {$wpdb->posts} ON {$wpdb->posts}.ID = {$wpdb->postmeta}.post_id
+         WHERE meta_key = '_employee_department'
+           AND meta_value != ''
+           AND post_status = 'publish'
+           AND post_type = 'employee_profile'
+         ORDER BY meta_value ASC"
+		);
+
+		// Initial server-side render (works without JS)
 		$profiles = get_posts([
 			'post_type' => 'employee_profile',
 			'post_status' => 'publish',
 			'numberposts' => -1,
+			'orderby' => 'title',
+			'order' => 'ASC',
 		]);
-		// includes a search input
+		$companies = $wpdb->get_col(
+			"SELECT DISTINCT meta_value
+     FROM {$wpdb->postmeta}
+     INNER JOIN {$wpdb->posts} ON {$wpdb->posts}.ID = {$wpdb->postmeta}.post_id
+     WHERE meta_key = '_employee_company'
+       AND meta_value != ''
+       AND post_status = 'publish'
+       AND post_type = 'employee_profile'
+     ORDER BY meta_value ASC"
+		);
+
+
 		ob_start();
 		?>
-		<p>
-				<input
-						type="text"
-						id="ag-employee-search"
-						placeholder="Search employees..."
-						style="width: 100%; max-width: 400px; padding: 8px; margin-bottom: 20px;"
-				>
-		</p>
-		<div id="ag-employee-list">
-		<?php
-		foreach ($profiles as $profile) {
-			$url = $this->get_employee_profile_url($profile->ID);
-			?>
-			<div class="ag-employee-profile" data-name="<?php echo esc_attr(strtolower(get_the_title($profile->ID))); ?>">
-				<h3><a href="<?php echo esc_url($url); ?>"><?php echo esc_html(get_the_title($profile->ID)); ?></a></h3>
-				<p><?php echo esc_html(get_post_meta($profile->ID, '_ag_employee_job_title', true)); ?></p>
-			</div>
-			<?php
+			<p>
+					<input
+							type="text"
+							id="ag-employee-search"
+							placeholder="Search employees..."
+							style="width: 100%; max-width: 400px; padding: 8px; margin-bottom: 10px;"
+					>
+			</p>
+			<?php if (!empty($departments)): ?>
+				<p>
+						<select id="ag-employee-department" style="padding: 8px; margin-bottom: 20px;">
+								<option value="">All Departments</option>
+								<?php foreach ($departments as $dept): ?>
+											<option value="<?php echo esc_attr($dept); ?>"><?php echo esc_html($dept); ?></option>
+								<?php endforeach; ?>
+						</select>
+				</p>
+			<?php endif; ?>
+			<?php if (!empty($companies)): ?>
+				<p>
+					<select id="ag-employee-company" style="padding: 8px; margin-bottom: 20px;">
+						<option value="">All Companies</option>
+						<?php foreach ($companies as $company): ?>
+							<option value="<?php echo esc_attr($company); ?>">
+								<?php echo esc_html($company); ?>
+							</option>
+						<?php endforeach; ?>
+					</select>
+				</p>
+			<?php endif; ?>
 
+			<div id="ag-employee-list">
+			<?php foreach ($profiles as $profile):
+				$url = $this->get_employee_profile_url($profile->ID);
+				?>
+						<div class="ag-employee-profile" data-name="<?php echo esc_attr(strtolower(get_the_title($profile->ID))); ?>">
+								<h3><a href="<?php echo esc_url($url); ?>"><?php echo esc_html(get_the_title($profile->ID)); ?></a></h3>
+								<p><?php echo esc_html(get_post_meta($profile->ID, '_employee_job_title', true)); ?></p>
+						</div>
+			<?php endforeach; ?>
+			</div>
+			<p>
+    <input
+        type="text"
+        id="ag-employee-website"
+        placeholder="Filter by website..."
+        style="width: 100%; max-width: 400px; padding: 8px; margin-bottom: 10px;"
+    >
+</p>
+
+			<?php
+			return ob_get_clean();
 	}
-		?>
-		</div>
-		<?php
-		return ob_get_clean();
-	}
+
 }
