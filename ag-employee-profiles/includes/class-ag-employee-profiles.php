@@ -78,6 +78,7 @@ class Ag_Employee_Profiles {
 		$this->set_locale();
 		$this->define_admin_hooks();
 		$this->define_public_hooks();
+		$this->define_meta_hooks();
 
 	}
 
@@ -159,12 +160,13 @@ class Ag_Employee_Profiles {
 		$this->loader->add_action('init', $plugin_admin, 'register_employee_profile_cpt',0 );
 		$this->loader->add_action('save_post', $plugin_admin, 'save_employee_profile_metaboxes', 10, 1);
 		$this->loader->add_action('add_meta_boxes', $plugin_admin, 'add_employee_profile_metaboxes', 10, 2);
-		$this->loader->add_filter('use_block_editor_for_post_type', $plugin_admin, 'disable_gutenberg_for_employee_profiles', 10, 2);
+		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'register_block_editor_assets');
 		$this->loader->add_action('admin_menu', $plugin_admin, 'add_employee_profiles_admin_menu');
 		$this->loader->add_action('admin_init', $plugin_admin, 'register_settings');
 		$this->loader->add_action('admin_init', $plugin_admin, 'register_settings_fields');
 		$this->loader->add_action('update_option_ag_employee_route_mode', $plugin_admin, 'maybe_flush_rewrite_on_route_mode_change', 10, 2);
-	/* 	$this->loader->add_action('admin_init', $plugin_admin, 'employee_profiles'); */
+
+		/* 	$this->loader->add_action('admin_init', $plugin_admin, 'employee_profiles'); */
 
 
 
@@ -253,6 +255,14 @@ class Ag_Employee_Profiles {
 	public function register_shortcodes()
 	{
 		add_shortcode('employee_profiles', [$this, 'employee_profiles']);
+	}
+
+	// Runs on all requests (admin, frontend, REST API) — needed for meta to be
+	// visible to the block editor via the REST API.
+	// Uses add_action directly instead of the Loader to ensure it fires early enough.
+	private function define_meta_hooks() {
+		$plugin_admin = new Ag_Employee_Profiles_Admin( $this->get_plugin_name(), $this->get_version() );
+		add_action( 'init', array( $plugin_admin, 'register_rest_meta' ) );
 	}
 
 }

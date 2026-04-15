@@ -409,5 +409,60 @@ public function save_employee_profile_metaboxes($post_id) {
         <?php
     }
 
+    public function register_block_editor_assets() {
+        $screen = get_current_screen();
+        if ( ! $screen || ! $screen->is_block_editor() ) {
+            return;
+        }
+
+        $asset_file = plugin_dir_path( dirname( __FILE__ ) ) . 'build/index.asset.php';
+        if ( ! file_exists( $asset_file ) ) {
+            return;
+        }
+        $asset = include $asset_file;
+
+        wp_enqueue_script(
+            'ag-employee-profiles-panel',
+            plugin_dir_url( dirname( __FILE__ ) ) . 'build/index.js',
+            $asset['dependencies'],
+            $asset['version'],
+            true
+        );
+    }
+
+    // new method for register the meta keys for REST API output
+    public function register_rest_meta() {
+        $meta_keys = array(
+            '_employee_email',
+            '_employee_phone',
+            '_employee_job_title',
+            '_employee_department',
+            '_employee_company',
+            '_employee_website',
+            '_employee_street',
+            '_employee_postcode',
+            '_employee_city',
+            '_employee_country',
+            '_employee_facebook',
+            '_employee_twitter',
+            '_employee_profile',
+            '_ag_employee_uuid',
+        );
+
+        // Loop through each key and register it for REST API access
+        // show_in_rest: true — allows the block editor to read/write this meta
+        // single: true — each post has one value for this key (not an array)
+        // type: string — the value is a plain text string
+        foreach ( $meta_keys as $key ) {
+            register_post_meta( 'employee_profile', $key, array(
+                'show_in_rest'  => true,
+                'single'        => true,
+                'type'          => 'string',
+                'auth_callback' => function() {
+                    return current_user_can( 'edit_posts' );
+                },
+            ) );
+        }
+    }
 
 }
