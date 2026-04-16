@@ -81,12 +81,3 @@ function run_ag_employee_profiles() {
 }
 run_ag_employee_profiles();
 
-// AG: Temporary test — non-underscore key to confirm REST API registration works
-add_action( 'init', function() {
-    register_post_meta( 'employee_profile', 'test_job_title', array(
-        'show_in_rest'  => true,
-        'single'        => true,
-        'type'          => 'string',
-        'auth_callback' => '__return_true',
-    ) );
-} );

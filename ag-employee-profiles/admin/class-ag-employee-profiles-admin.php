@@ -114,7 +114,7 @@ public function register_employee_profile_cpt() {
         'has_archive'   => true,
         'show_in_rest'  => true,  // CHANGE This
         'menu_icon'     => 'dashicons-businessman',
-        'supports'      => array( 'title', 'editor', 'thumbnail' ),
+        'supports'      => array( 'title', 'editor', 'thumbnail', 'custom-fields' ),
     );
     register_post_type( 'employee_profile', $args );
 }
@@ -251,6 +251,12 @@ public function render_employee_profile_details_metabox( $post ) {
 }
 
 public function save_employee_profile_metaboxes($post_id) {
+        // When Gutenberg saves, it also submits classic metabox data via post.php
+        // with old field values — bail out so we don't overwrite what the REST API saved
+        if ( isset( $_REQUEST['meta-box-loader'] ) ) {
+            return;
+        }
+
         // 1) Check nonce
         if (!isset($_POST['employee_profile_details_nonce'])) {
             return;
