@@ -13,6 +13,11 @@
  * @subpackage Ag_Employee_Profiles/includes
  */
 
+// AG: Exit on direct access.
+if ( ! defined( 'WPINC' ) ) {
+	die;
+}
+
 /**
  * The core plugin class.
  *
