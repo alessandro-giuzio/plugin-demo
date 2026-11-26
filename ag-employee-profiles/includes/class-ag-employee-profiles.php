@@ -13,6 +13,11 @@
  * @subpackage Ag_Employee_Profiles/includes
  */
 
+// AG: Exit on direct access.
+if ( ! defined( 'WPINC' ) ) {
+	die;
+}
+
 /**
  * The core plugin class.
  *
@@ -159,6 +164,8 @@ class Ag_Employee_Profiles {
 		$this->loader->add_action( 'admin_enqueue_scripts', $plugin_admin, 'enqueue_scripts' );
 		$this->loader->add_action('init', $plugin_admin, 'register_employee_profile_cpt',0 );
 		$this->loader->add_action('save_post', $plugin_admin, 'save_employee_profile_metaboxes', 10, 1);
+		// AG: Classic editor for profiles only, so the metabox fields and the UUID are saved.
+		$this->loader->add_filter('use_block_editor_for_post_type', $plugin_admin, 'disable_gutenberg_for_employee_profiles', 10, 2);
 		$this->loader->add_action('add_meta_boxes', $plugin_admin, 'add_employee_profile_metaboxes', 10, 2);
 		$this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'register_block_editor_assets');
 		$this->loader->add_action('admin_menu', $plugin_admin, 'add_employee_profiles_admin_menu');

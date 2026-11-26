@@ -259,17 +259,17 @@ class Ag_Employee_Profiles_Public {
 	$post_id = (int) $ids[0];
 	// Collect data (title + meta)
 	  $full_name = get_the_title($post_id);
-	  $job_title = get_post_meta($post_id, '_ag_employee_job_title', true);
-	  $company = get_post_meta($post_id, '_ag_employee_company', true);
-	  $email = get_post_meta($post_id, '_ag_employee_email', true);
-	  $phone = get_post_meta($post_id, '_ag_employee_phone', true);
-	  $website = get_post_meta($post_id, '_ag_employee_website', true);
+	  // AG: Same meta keys the admin metabox saves. There is no state/region field.
+	  $job_title = get_post_meta($post_id, '_employee_job_title', true);
+	  $company = get_post_meta($post_id, '_employee_company', true);
+	  $email = get_post_meta($post_id, '_employee_email', true);
+	  $phone = get_post_meta($post_id, '_employee_phone', true);
+	  $website = get_post_meta($post_id, '_employee_website', true);
 
-	  $street = get_post_meta($post_id, '_ag_employee_street', true);
-	  $city = get_post_meta($post_id, '_ag_employee_city', true);
-	  $state = get_post_meta($post_id, '_ag_employee_state', true);
-	  $postal_code = get_post_meta($post_id, '_ag_employee_postal_code', true);
-	  $country = get_post_meta($post_id, '_ag_employee_country', true);
+	  $street = get_post_meta($post_id, '_employee_street', true);
+	  $city = get_post_meta($post_id, '_employee_city', true);
+	  $postal_code = get_post_meta($post_id, '_employee_postcode', true);
+	  $country = get_post_meta($post_id, '_employee_country', true);
 
 	// Split name into first/last for vCard
 		$parts = preg_split('/\s+/', trim($full_name));
@@ -293,11 +293,11 @@ class Ag_Employee_Profiles_Public {
 		if (!empty($website))
 			$lines[] = 'URL:' . $this->vcard_escape($website);
 	// ADR: Street;City;State;PostalCode;Country
-		if (!empty($street) || !empty($city) || !empty($state) || !empty($postal_code) || !empty($country)) {
+		if (!empty($street) || !empty($city) || !empty($postal_code) || !empty($country)) {
 			$adr = 'ADR;TYPE=WORK:;;' .
 				$this->vcard_escape($street) . ';' .
 				$this->vcard_escape($city) . ';' .
-				$this->vcard_escape($state) . ';' .
+				';' . // AG: Region left empty so the postal code stays in its position.
 				$this->vcard_escape($postal_code) . ';' .
 				$this->vcard_escape($country);
 			$lines[] = $adr;
