@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(./check.sh)",
+      "Bash(php -l *)",
+      "Bash((cd ag-employee-profiles && npm run build))",
+      "Bash(git commit *)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(wp *)",
+      "Bash(composer require *)",
+      "Bash(composer update *)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Edit(./.env)",
+      "Edit(./.env.*)",
+      "Edit(**/wp-config.php)",
+      "Read(**/wp-config.php)",
+      "Bash(wp db reset *)",
+      "Bash(wp db drop *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)"
+    ]
+  }
+}
